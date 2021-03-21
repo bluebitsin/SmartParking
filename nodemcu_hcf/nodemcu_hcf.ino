@@ -1,5 +1,10 @@
 /*
  * Hoopti Check-in Facility 
+ * 
+ *     * 1 led indicators - input/read
+ *     * 2 servo gate open / close - input/read - need 2 apis one for open gate another for close
+ *     * 3 lcd display - input/read - occupide booked vaccant
+ *     * 4 ir sensors - output/update
  */
 
 #include <ESP8266WiFi.h>
@@ -7,6 +12,10 @@
 #include <ESP8266WebServer.h>
 #include <ESP8266HTTPClient.h>
 #include <ArduinoJson.h>
+#include <Servo.h>
+#include <Wire.h> 
+#include <LiquidCrystal_I2C.h>
+
 
 // Set WiFi Credentials
 const char *ssid ="Mkn88";
@@ -22,6 +31,12 @@ unsigned long timerDelay = 5000;
 
 // Set api server base url
 const String host = "http://digitalinhouse.in/apis/";
+
+// Define Servo object
+Servo servoGate;
+
+// Define LCD object
+LiquidCrystal_I2C lcd(0x3F,16,2);  //0x3F is the i2c address, while 16 = columns, and 2 = rows. 
 
 void setup() {
 
@@ -79,18 +94,59 @@ void connectToNetwork(){
    */
    void initializingSensors(){
 
-      updateLedIndicators();
+      //Assigin GPIO Pin to servo
+      servoGate.attach(2); //Replace with correct IO pin
+      servoGate.write(0); //Initially Close Gate
+      
+      //Set LCD Display
+      lcd.begin();                 //Init the LCD
+      lcd.backlight();            //Activate backlight     
+      lcd.home();
       
     }
    
 
   /*
-   * This function defines the 
+   * These function update / read sensors in every 1 second 
    */
   void updateLedIndicators(){
     
     
     }
+
+   /*
+    * This function open/close servo gate
+    */
+   void updateServoGate(bool isOpen){
+
+      if(isOpen){
+          servoGate.write(90);
+        }
+        else{
+            servoGate.write(0);
+          }
+    
+    }   
+
+     /*
+      * This function update lcd display with 
+      * the parking slot availablity information  
+      */
+    void updateLCDisplay(){
+         
+         lcd.clear();
+         lcd.setCursor(0,0);
+         lcd.print("Smart Parking");
+         
+         //print updated information
+         lcd.setCursor(0,1);
+         lcd.print("Show Parking Slot Count / Status");
+      }
+
+    int readIRSensor(){
+      
+      
+      }
 
 
     /*
@@ -157,13 +213,6 @@ void connectToNetwork(){
         Serial.print("Indicator: ");
         Serial.println(ledOn);
 
-      /*
-       * 1 led indicators - input/read
-       * 2 servo gate open / close - input/read - need 2 apis one for open gate another for close
-       * 3 lcd display - input/read - occupide booked vaccant
-       * 4 ir sensors - output/update
-       * 5 
-       */
     }
     else {
       Serial.println("WiFi Disconnected");
